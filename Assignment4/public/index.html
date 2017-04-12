@@ -1,0 +1,111 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width, maximum-scale=1.0">
+    <script src='asyncReq.js'> </script>
+    <script src='https://code.jquery.com/jquery-3.2.0.min.js'> </script>
+    <script>
+    function addNew(){
+      var imageURL = prompt("Enter New Image URL:");
+      var id = new Date().getTime();
+      if(imageURL.indexOf("http") >=0 && imageURL.length > 10){
+        var url = "./addTodo" + "?id=" + id + "&url=" + imageURL + "&name=Untitled";
+        loadFile(url ,function(d){
+          formatTodos(JSON.parse(d));
+        });
+      }
+    }
+    function deleteImage()
+    {
+       deleteTodo(currSel);
+    }
+    function deleteTodo(index){
+      var flag = confirm("Are you sure you want to delete?");
+      if(flag){
+        var url = "./deleteTodo" + "?id=" + index;
+        loadFile(url ,function(d){
+          formatTodos(JSON.parse(d));
+        });
+      }
+    }
+    function formatTodos(list)
+    {
+      var markup = "";
+      if(list.length == 0){
+        markup = "No images yet"
+        document.getElementById("todoListWrapper").innerHTML = markup;
+        return;
+      }
+      for(var i = 0; i < list.length; i++){
+        markup += "<li> <a href='javascript:imageSelected(" + list[i].id + "," + (i+1) + ")'>" + list[i].name +
+            "</a></li>";
+      }
+      document.getElementById("todoListWrapper").innerHTML = markup;
+      imageSelected(list[0].id);
+    }
+    var currSel = 0;
+    function imageSelected(id, index){
+        currSel = id;
+        $("#todoListWrapper li a").removeClass("selected");
+        $("#todoListWrapper li:nth-of-type(" + index + ") a").addClass("selected");
+        var url = "./getTodo?id=" + id;
+        loadFile(url ,function(d){
+          var data = JSON.parse(d);
+          document.getElementById("theTitle").innerHTML = data.name;
+          document.getElementById("anImage").style.backgroundImage = "url(" + data.url + ")";
+        });
+    }
+    function start()
+    {
+      var url = "./getTodos";
+      loadFile(url ,function(d){
+        console.log(d);
+        formatTodos(JSON.parse(d));
+      })
+    }
+    </script>
+    <style>
+        .selected {
+            color: blue;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #addButton {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .delButton {
+            float: right;
+        }
+
+        #anImage {
+            height: 200px;
+            width: 100%;
+            background-size: contain;
+            background-position: 50%;
+            background-repeat: no-repeat;
+        }
+
+    </style>
+</head>
+
+<body onload='start()'>
+    <h1> My Image Collection </h1>
+    <button id='addButton' onclick='addNew()'> + </button>
+    <ol id='todoListWrapper'> </ol>
+    <div id='theDetails'>
+        <h1 id='theTitle'></h1>
+        <div id='anImage'></div>
+
+        <button onclick='deleteImage()'> del </button>
+        <button onclick='renameImage()'> rename </button>
+
+    </div>
+</body>
+
+</html>
